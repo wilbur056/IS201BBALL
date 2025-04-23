@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Throw Frenzy</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom, #1e1e2f, #3b3b4f);
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      margin-top: 1rem;
+    }
+    #scoreboard, #best-score {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+    }
+    .shoot-button {
+      position: absolute;
+      background-color: orange;
+      border: none;
+      color: white;
+      padding: 1rem 2rem;
+      font-size: 1.25rem;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s;
+    }
+    .shoot-button:hover {
+      transform: scale(1.1);
+    }
+    #startBtn {
+      margin-top: 2rem;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    #timer {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+    }
+    #basketball-img {
+      display: none;
+      width: 150px;
+      height: 150px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Free Throw Frenzy</h1>
+    <div id="scoreboard">Score: 0</div>
+    <div id="best-score">Best Score: 0</div>
+    <div id="timer">Time: 30</div>
+    <button id="startBtn">Start Game</button>
+    <img id="basketball-img" src="https://tse3.mm.bing.net/th?id=OIP.K943zt-6H786OdE7oJbrqwHaEK&pid=Api&P=0&h=220" alt="Basketball" />
+  </div>
+
+  <script>
+    const container = document.querySelector('.game-container');
+    const startBtn = document.getElementById('startBtn');
+    const scoreboard = document.getElementById('scoreboard');
+    const bestScoreDisplay = document.getElementById('best-score');
+    const timerDisplay = document.getElementById('timer');
+    const basketballImg = document.getElementById('basketball-img');
+
+    let score = 0;
+    let timeLeft = 30;
+    let interval;
+    let buttonTimeout;
+    let bestScore = localStorage.getItem('bestScore') || 0;
+    let countdown;
+
+    bestScoreDisplay.textContent = `Best Score: ${bestScore}`;
+
+    function getRandomPosition() {
+      const x = Math.floor(Math.random() * (window.innerWidth - 150));
+      const y = Math.floor(Math.random() * (window.innerHeight - 150));
+      return { x, y };
+    }
+
+    function spawnButton() {
+      const { x, y } = getRandomPosition();
+      const btn = document.createElement('button');
+      btn.className = 'shoot-button';
+      btn.textContent = 'Shoot!';
+      btn.style.left = `${x}px`;
+      btn.style.top = `${y}px`;
+
+      btn.addEventListener('click', () => {
+        score++;
+        scoreboard.textContent = `Score: ${score}`;
+        btn.remove();
+        clearTimeout(buttonTimeout);
+        spawnButton();
+      });
+
+      container.appendChild(btn);
+      buttonTimeout = setTimeout(() => {
+        btn.remove();
+        spawnButton();
+      }, 1000);
+    }
+
+    function startCountdown() {
+      let countdownTime = 3;
+      timerDisplay.textContent = `Starting in: ${countdownTime}`;
+
+      countdown = setInterval(() => {
+        countdownTime--;
+        timerDisplay.textContent = `Starting in: ${countdownTime}`;
+        
+        if (countdownTime <= 0) {
+          clearInterval(countdown);
+          startGame();
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = 30;
+      scoreboard.textContent = 'Score: 0';
+      timerDisplay.textContent = 'Time: 30';
+      startBtn.style.display = 'none';
+
+      spawnButton();
+
+      interval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Time: ${timeLeft}`;
+
+        if (timeLeft === 0) {
+          clearInterval(interval);
+          clearTimeout(buttonTimeout);
+          document.querySelectorAll('.shoot-button').forEach(btn => btn.remove());
+          basketballImg.style.display = 'block'; // Show the basketball image
+          startBtn.style.display = 'inline-block';
+          startBtn.textContent = 'Play Again';
+          
+          // Check for best score
+          if (score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('bestScore', bestScore); // Save to localStorage
+            bestScoreDisplay.textContent = `Best Score: ${bestScore}`;
+          }
+
+          alert(`Time's up! You scored ${score} points!`);
+        }
+      }, 1000);
+    }
+
+    startBtn.addEventListener('click', () => {
+      basketballImg.style.display = 'none'; // Hide the basketball at the start
+      startBtn.textContent = 'Starting...';
+      startCountdown();
+    });
+  </script>
+</body>
+</html>
